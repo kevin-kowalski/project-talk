@@ -5,9 +5,10 @@ import socketIOClient from 'socket.io-client';
 const ENDPOINT = 'http://localhost:3001';
 
 const AudioCall = () => {
-  const [socket, setSocket] = useState<SocketIOClient.Socket | null>(null);
-  const [position, setPosition] = useState<GeolocationPosition | null>(null);
-  const [error, setError] = useState<GeolocationPositionError | null>(null);
+  const [ socket, setSocket ] = useState<SocketIOClient.Socket | null>(null);
+  const [ position, setPosition ] = useState<GeolocationPosition | null>(null);
+  const [ error, setError ] = useState<GeolocationPositionError | null>(null);
+  const [ matchedUser, setMatchedUser ] = useState<string | null>(null);
 
   useEffect(() => {
     const options = {
@@ -33,10 +34,14 @@ const AudioCall = () => {
 
       socket.on('connect', () => {
         console.log('Connected to server');
+        console.log(position);
 
         socket.emit('userConnected', {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
+          coords: {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          },
+          timstamp: position.timestamp
         });
       });
 
@@ -47,6 +52,9 @@ const AudioCall = () => {
   const handleCallClick = () => {
     if (socket) {
       socket.emit('initiateCall');
+      socket.on('callMatched', ({ userId }: { userId: string }) => {
+        setMatchedUser(userId);
+      });
     }
   };
 
@@ -55,6 +63,12 @@ const AudioCall = () => {
       {error && <div>Failed to get user location: {error.message}</div>}
       {!position && !error && <div>Getting user location...</div>}
       {position && !error && <button onClick={handleCallClick}>Call</button>}
+      {position && !error && matchedUser && (
+        <div>
+          <p>Match found!</p>
+          <p>Matched user’s socket ID: {matchedUser}</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { Socket } from "socket.io";
+import { handleInitialCall, handleUserConnected, handleUserDisconnected } from "./matching";
 
 const Koa = require('koa');
 const http = require('http');
@@ -18,16 +19,19 @@ const io = socketIO(server, {
 io.on('connection', (socket: Socket) => {
   console.log(`Socket ${socket.id} connected`);
 
-  socket.on('disconnect', () => {
-    console.log(`Socket ${socket.id} disconnected`);
-  });
-
   socket.on('userConnected', (data: GeolocationPosition) => {
-    console.log(data);
+    console.log('userConnected, data:', data);
+    handleUserConnected(socket, data);
   })
 
-  socket.on('initiateCall', (data: any) => {
-    console.log(data);
+  socket.on('disconnect', () => {
+    console.log(`Socket ${socket.id} disconnected`);
+    handleUserDisconnected(socket);
+  });
+
+  socket.on('initiateCall', () => {
+    console.log('initiateCall');
+    handleInitialCall(socket);
   })
 });
 

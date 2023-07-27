@@ -3,6 +3,8 @@ import { Socket } from "socket.io";
 let users: { [id: string]: GeolocationPosition } = {};
 
 export const handleUserConnected = (socket: Socket, position: GeolocationPosition) => {
+  console.log('handleUserConnected: position:', position);
+
   users[socket.id] = position;
   console.log(`User ${socket.id} connected:`, position);
 }
@@ -12,8 +14,12 @@ export const handleUserDisconnected = (socket: Socket) => {
   console.log(`User ${socket.id} disconnected`);
 }
 
-export const handleInitialCall = (socket: Socket, position: GeolocationPosition) => {
+export const handleInitialCall = (socket: Socket) => {
   const userIds = Object.keys(users);
+  const user = {
+    id: socket.id,
+    position: users[socket.id]
+  };
 
   // Ensure there are enough users looking for a match
   if (userIds.length < 2) {
@@ -22,15 +28,20 @@ export const handleInitialCall = (socket: Socket, position: GeolocationPosition)
   }
 
   // Find most distant user
-  const userIdsWithPositions = userIds.map(id => ({
+  const userIdsWithPositions = userIds.filter((uid) => uid !== user.id).map(id => ({
     id,
     position: users[id]
   }));
 
-  const userIdsWithDistance = userIdsWithPositions.map(user => ({
-    ...user,
-    distance: getDistance(position.coords.latitude, position.coords.longitude, user.position.coords.latitude, user.position.coords.longitude)
-  }))
+  const userIdsWithDistance = userIdsWithPositions.map(u => ({
+    ...u,
+    distance: getDistance(
+      user.position.coords.latitude,
+      user.position.coords.longitude,
+      u.position.coords.latitude,
+      u.position.coords.longitude
+    )
+  }));
 
   const userMostDistant = userIdsWithDistance.reduce((acc, user) => {
     return user.distance > acc.distance ? user : acc;
