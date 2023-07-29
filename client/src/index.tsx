@@ -3,6 +3,11 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import * as process from 'process';
+
+(window as any).global = window;
+(window as any).process = process;
+(window as any).Buffer = [];
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
