@@ -14,11 +14,11 @@ const AudioCall = () => {
   const [matchedCallee, setMatchedCallee] = useState<string | null>(null);
   const [matchedCaller, setMatchedCaller] = useState<string | null>(null);
   const [matchedCallerData, setMatchedCallerData] = useState<{from: string, signalData: any} | null>(null);
+
   const [localStream, setLocalStream] = useState<MediaStream | undefined>(undefined);
   const [remoteStream, setRemoteStream] = useState<MediaStream | undefined>(undefined);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-
 
   // Requesting user’s geolocation position
   useEffect(() => {
@@ -138,6 +138,7 @@ const AudioCall = () => {
       });
 
       socket.on('callAnswer', ({ signalData, from }) => {
+        // Ensure the connection is established to the correct user
         if (matchedCallee === from) {
           peerCaller.signal(signalData);
         }
@@ -148,6 +149,8 @@ const AudioCall = () => {
     }
   };
 
+  // Set the matched caller after
+  // receiving the caller data
   useEffect(() => {
     if (matchedCallerData) {
       setMatchedCaller(matchedCallerData.from)
@@ -157,8 +160,6 @@ const AudioCall = () => {
   // Answer call
   useEffect(() => {
     if (matchedCallerData) {
-      console.log(matchedCallerData);
-
       answerCall(matchedCallerData);
     }
   }, [matchedCaller]);
@@ -166,13 +167,8 @@ const AudioCall = () => {
   // Answer call helper
   const answerCall = ({ from, signalData }: {from: string, signalData: any}) => {
     console.log('Answering call…');
-    console.log('socket:', socket);
-    console.log('matchedCaller:', matchedCaller);
-    console.log(`socket && matchedCaller: ${socket && matchedCaller}`);
 
     if (socket && matchedCaller) {
-      console.log('in answerCall() and "if (socket && matchedCaller)"');
-
       const peerCallee = new Peer({
         initiator: false,
         trickle: false,
@@ -192,6 +188,7 @@ const AudioCall = () => {
         setRemoteStream(stream);
       });
 
+      // Ensure the connection is established to the correct user
       console.log('matchedCaller === from:', matchedCaller === from);
       if (matchedCaller === from) {
         peerCallee.signal(signalData);
