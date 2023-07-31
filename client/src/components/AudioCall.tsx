@@ -20,18 +20,19 @@ const AudioCall = () => {
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const [remoteStream, setRemoteStream] = useState<MediaStream | undefined>(undefined);
-  // const [sourceNode, setSourceNode] = useState<MediaStreamAudioSourceNode | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 
-  const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
-  const [bufferLength, setBufferLength] = useState<number>(0);
-  const [dataArray, setDataArray] = useState<Uint8Array | null>(null);
+  const [analyzerRemote, setAnalyzerRemote] = useState<AnalyserNode | null>(null);
+  const [bufferLengthRemote, setBufferLengthRemote] = useState<number>(0);
+  const [dataArrayRemote, setDataArrayRemote] = useState<Uint8Array | null>(null);
+
+  const [inCall, setInCall] = useState(false);
 
   // Requesting user’s geolocation position
   useEffect(() => {
     const options = {
       enableHighAccuracy: true,
-      timeout: 5000,
+      // timeout: 5000,
       maximumAge: 0
     };
 
@@ -131,6 +132,14 @@ const AudioCall = () => {
         stream: localStream,
       });
 
+      peerCaller.on('connect', () => {
+        setInCall(true);
+      })
+
+      peerCaller.on('close', () => {
+        setInCall(false);
+      })
+
       peerCaller.on('signal', (data) => {
         socket.emit('tryCall', {
           from: socket.id,
@@ -158,23 +167,32 @@ const AudioCall = () => {
 
   useEffect(() => {
     if (remoteStream) {
-      processStream(remoteStream)
+      processRemoteStream(remoteStream)
     }
   }, [remoteStream])
 
-  const processStream = (stream: MediaStream) => {
+  const processRemoteStream = (stream: MediaStream) => {
     const audioContext = new AudioContext();
     const source = audioContext.createMediaStreamSource(stream);
     // setSourceNode(source);
+
+    // Create and play audio element
+    const mediaElement = new Audio();
+    const mediaElementSource = audioContext.createMediaElementSource(mediaElement);
+    mediaElementSource.connect(audioContext.destination);
+    mediaElement.srcObject = source.mediaStream;
+    mediaElement.play();
+
+
     const analyzer = audioContext.createAnalyser();
     source.connect(analyzer);
     analyzer.fftSize = 128;
     const bufferLength = analyzer.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
-    setAnalyzer(analyzer);
-    setBufferLength(bufferLength);
-    setDataArray(dataArray);
+    setAnalyzerRemote(analyzer);
+    setBufferLengthRemote(bufferLength);
+    setDataArrayRemote(dataArray);
   };
 
   // Set the matched caller after
@@ -203,6 +221,14 @@ const AudioCall = () => {
         stream: localStream,
       });
 
+      peerCallee.on('connect', () => {
+        setInCall(true);
+      })
+
+      peerCallee.on('close', () => {
+        setInCall(false);
+      })
+
       peerCallee.on('signal', (data) => {
         socket.emit('answerCall', {
           from: socket.id,
@@ -217,7 +243,6 @@ const AudioCall = () => {
       });
 
       // Ensure the connection is established to the correct user
-      console.log('matchedCaller === from:', matchedCaller === from);
       if (matchedCaller === from) {
         peerCallee.signal(signalData);
       }
@@ -243,46 +268,33 @@ const AudioCall = () => {
     }
   }, [remoteStream]);
 
-  // Handle the user initiating the call
-  const handleCallClick = () => {
-    requestMatch();
-  };
-
   // Render component
   return (
     <div>
-      {error && <div>Error: {error.message}</div>}
-      {!position && !error && <div>Getting user location...</div>}
-      {position && !error && localStream && (!matchedCallee && !matchedCaller) && (
-        <button onClick={handleCallClick}>Call</button>
+      {error && (
+        <p>Error: {error.message}</p>
       )}
+
+      {!position && !error && (
+        <p>Getting user location...</p>
+      )}
+
       {position && !error && localStream && remoteStream && (
         <div>
           <p>Match found!</p>
           <p>Matched user’s socket ID: {matchedCaller || matchedCallee}</p>
         </div>
       )}
+
       {position && !error && localStream && (
         <div>
-          <CablesPatch analyzer={analyzer} bufferLength={bufferLength} dataArray={dataArray} />
-          {/* Show the other user's video stream */}
-          {localStream && (
-            <video
-              ref={localVideoRef}
-              autoPlay
-              playsInline
-              muted
-              style={{ width: '600px', maxWidth: '95%', height: 'auto' }}
-            />
-          )}
-          {remoteStream && (
-            <video
-              ref={remoteVideoRef}
-              autoPlay
-              playsInline
-              style={{ width: '600px', maxWidth: '95%', height: 'auto'}}
-            />
-          )}
+          <CablesPatch
+            requestMatch={requestMatch}
+            analyzerRemote={analyzerRemote}
+            bufferLengthRemote={bufferLengthRemote}
+            dataArrayRemote={dataArrayRemote}
+            inCall={inCall}
+          />
         </div>
       )}
     </div>

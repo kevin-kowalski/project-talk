@@ -1,6 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
-function CablesPatch({ analyzer, bufferLength, dataArray }: {analyzer: AnalyserNode | null, bufferLength: number, dataArray: Uint8Array | null}) {
+function CablesPatch({
+  requestMatch,
+  analyzerRemote,
+  bufferLengthRemote,
+  dataArrayRemote,
+  inCall
+}: {
+  requestMatch: Function,
+  analyzerRemote: AnalyserNode | null,
+  bufferLengthRemote: number,
+  dataArrayRemote: Uint8Array | null,
+  inCall: Boolean
+}) {
+
+  const [patchLoaded, setPatchLoaded] = useState(false);
 
   const canvasId = "glcanvas";
   const patchDir = '/patch/';
@@ -24,39 +38,78 @@ function CablesPatch({ analyzer, bufferLength, dataArray }: {analyzer: AnalyserN
         jsPath: patchDir + '/js',
         glCanvasId: canvasId,
         canvas: {'alpha': true, 'premultipliedAlpha': true},
-        variables: {
-          avgVolume: 0,
-        },
+        glCanvasResizeToWindow: true,
         onPatchLoaded: patchInitialized,
         onFinishedLoading: patchFinishedLoading,
       });
     }
 
     function patchInitialized () {
-      console.log(patchDir + ' initialized');
+      console.log('Patch initialized');
     }
 
     function patchFinishedLoading () {
-      console.log(patchDir + ' finished loading');
+      console.log('Patch finished loading');
+      setPatchLoaded(true);
     }
   }, [canvasId, patchDir]);
 
   useEffect(() => {
-    const updateVolume = () => {
-      if (analyzer && dataArray) {
-        requestAnimationFrame(updateVolume);
+    const updateVolumeRemote = () => {
+      if (analyzerRemote && dataArrayRemote) {
+        requestAnimationFrame(updateVolumeRemote);
 
-        analyzer.getByteFrequencyData(dataArray);
-        const avgVolume = dataArray.reduce((acc, curr) => acc + curr, 0) / bufferLength;
-        CABLES.patch.setVariable("avgVolume", avgVolume);
+        analyzerRemote.getByteFrequencyData(dataArrayRemote);
+        const avgVolume = dataArrayRemote.reduce((acc, curr) => acc + curr, 0) / bufferLengthRemote;
+        CABLES.patch.setVariable("avgVolumeRemote", avgVolume);
       }
     };
 
-    updateVolume();
-  }, [analyzer, bufferLength, dataArray])
+    updateVolumeRemote();
+  }, [analyzerRemote, bufferLengthRemote, dataArrayRemote])
+
+  useEffect(() => {
+    if (patchLoaded) {
+      const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
+      canvas.style.opacity = '1';
+
+      const clickBox = document.querySelector('.click-box') as HTMLDivElement;
+      clickBox.style.cursor = 'pointer';
+    }
+  }, [patchLoaded])
+
+  useEffect(() => {
+    if (patchLoaded) {
+      CABLES.patch.setVariable("inCall", inCall);
+    }
+  }, [inCall, patchLoaded])
+
+  // Handle the user initiating the call
+  const handleCallClick = () => {
+    if (patchLoaded) {
+      requestMatch();
+    }
+  };
+
+  // Handle the user hovering over the orb
+  const handleMouseOver = () => {
+    if (patchLoaded) {
+      CABLES.patch.setVariable("orbHovered", true);
+    }
+  }
+  const handleMouseOut = () => {
+    if (patchLoaded) {
+      CABLES.patch.setVariable("orbHovered", false);
+    }
+  }
 
   return (
-    <canvas id={canvasId} style={{ width: '600px', maxWidth: '95%', aspectRatio: '1' }}></canvas>
+    <>
+      <div className='click-box-wrapper'>
+        <div className='click-box' onClick={handleCallClick} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}></div>
+      </div>
+      <canvas id={canvasId}></canvas>
+    </>
   );
 }
 
