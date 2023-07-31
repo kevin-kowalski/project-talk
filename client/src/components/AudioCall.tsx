@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as SocketIOClient from 'socket.io-client';
 import io from 'socket.io-client';
 import Peer from 'simple-peer';
+import CablesPatch from './CablesPatch';
 
 // const ENDPOINT = 'http://127.0.0.1:80';
 const ENDPOINT = 'https://cuddly-vaguely-lark.ngrok-free.app';
@@ -16,9 +17,15 @@ const AudioCall = () => {
   const [matchedCallerData, setMatchedCallerData] = useState<{from: string, signalData: any} | null>(null);
 
   const [localStream, setLocalStream] = useState<MediaStream | undefined>(undefined);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | undefined>(undefined);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  const [remoteStream, setRemoteStream] = useState<MediaStream | undefined>(undefined);
+  // const [sourceNode, setSourceNode] = useState<MediaStreamAudioSourceNode | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
+  const [bufferLength, setBufferLength] = useState<number>(0);
+  const [dataArray, setDataArray] = useState<Uint8Array | null>(null);
 
   // Requesting user’s geolocation position
   useEffect(() => {
@@ -89,7 +96,7 @@ const AudioCall = () => {
           });
         });
     }
-  }, [position]);
+  }, [position, error]);
 
   // Request remote id
   const requestMatch = () => {
@@ -147,6 +154,27 @@ const AudioCall = () => {
         }
       });
     }
+  };
+
+  useEffect(() => {
+    if (remoteStream) {
+      processStream(remoteStream)
+    }
+  }, [remoteStream])
+
+  const processStream = (stream: MediaStream) => {
+    const audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    // setSourceNode(source);
+    const analyzer = audioContext.createAnalyser();
+    source.connect(analyzer);
+    analyzer.fftSize = 128;
+    const bufferLength = analyzer.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    setAnalyzer(analyzer);
+    setBufferLength(bufferLength);
+    setDataArray(dataArray);
   };
 
   // Set the matched caller after
@@ -223,15 +251,20 @@ const AudioCall = () => {
   // Render component
   return (
     <div>
-      {error && <div>Failed to get user location: {error.message}</div>}
+      {error && <div>Error: {error.message}</div>}
       {!position && !error && <div>Getting user location...</div>}
       {position && !error && localStream && (!matchedCallee && !matchedCaller) && (
         <button onClick={handleCallClick}>Call</button>
       )}
-      {position && !error && localStream && (
+      {position && !error && localStream && remoteStream && (
         <div>
           <p>Match found!</p>
           <p>Matched user’s socket ID: {matchedCaller || matchedCallee}</p>
+        </div>
+      )}
+      {position && !error && localStream && (
+        <div>
+          <CablesPatch analyzer={analyzer} bufferLength={bufferLength} dataArray={dataArray} />
           {/* Show the other user's video stream */}
           {localStream && (
             <video
