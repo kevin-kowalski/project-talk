@@ -2,6 +2,12 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Xanh+Mono:ital@0;1&display=swap');
 
+/* VARIABLES */
+
+:root {
+  --padding: 20px;
+}
+
 /* BASICS */
 
 * {
@@ -19,6 +25,10 @@ body {
   background-color: black;
 }
 
+body:has( div[data-value=false]) {
+  color: black;
+}
+
 p {
   font-family: 'Xanh Mono';
 }
@@ -28,8 +38,9 @@ p {
 .app {
   position: relative;
   text-align: center;
-  padding: 20px;
+  padding: var(--padding);
   z-index: 100;
+  height: 100vh;
 }
 
 /* CLICK BOX */
@@ -60,4 +71,11 @@ canvas {
   opacity: 0;
   transition: opacity 1s ease-in-out;
   pointer-events: none;
+}
+
+/* MODE SELECTOR */
+
+.mode-selector {
+  font-family: 'Xanh Mono';
+  cursor: pointer;
 }

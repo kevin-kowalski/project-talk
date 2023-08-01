@@ -15,6 +15,7 @@ function CablesPatch({
 }) {
 
   const [patchLoaded, setPatchLoaded] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
 
   const canvasId = "glcanvas";
   const patchDir = '/patch/';
@@ -75,6 +76,9 @@ function CablesPatch({
 
       const clickBox = document.querySelector('.click-box') as HTMLDivElement;
       clickBox.style.cursor = 'pointer';
+
+      // Initialize dark mode variable on patch
+      CABLES.patch.setVariable('darkMode', darkMode);
     }
   }, [patchLoaded])
 
@@ -97,18 +101,28 @@ function CablesPatch({
       CABLES.patch.setVariable("orbHovered", true);
     }
   }
+
   const handleMouseOut = () => {
     if (patchLoaded) {
       CABLES.patch.setVariable("orbHovered", false);
     }
   }
 
+  // Handle the user clicking the mode selector button
+  const handleModeSelectorClick = () => {
+    setDarkMode(!darkMode);
+    if (patchLoaded) {
+      CABLES.patch.setVariable('darkMode', !darkMode);
+    }
+  }
+
   return (
     <>
+      <canvas id={canvasId}></canvas>
       <div className='click-box-wrapper'>
         <div className='click-box' onClick={handleCallClick} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}></div>
       </div>
-      <canvas id={canvasId}></canvas>
+      <div className='mode-selector' data-value={darkMode} onClick={handleModeSelectorClick}>{darkMode ? 'Light Mode' : 'Dark Mode'}</div>
     </>
   );
 }
