@@ -28,13 +28,16 @@ export const handleRequestMatch = (socket: Socket) => {
   console.log(`\n> Match requested from: ${socket.id}`);
 
   // Find a match for the user
-  const matchSocketId = selectMatch(socket);
+  const match = selectMatch(socket);
 
   // Ensure a match was found
-  if (matchSocketId) {
+  if (match) {
     // Emit the match details to the user
-    socket.emit('matchFound', { matchSocketId: matchSocketId });
-    console.log(`\n> Match found: ${matchSocketId}`);
+    socket.emit('matchFound', {
+      matchSocketId: match.id,
+      matchDistance: match.distance.toFixed(2)
+    });
+    console.log(`\n> Match found: ${match.id} (distance: ${match.distance})`);
   }
 };
 
@@ -56,6 +59,17 @@ export const handleAnswerCall = ({ from, to, signalData }: { from: any, to: any,
   // Remove caller and callee from dictionary of available users
   delete users[from];
   delete users[to];
+};
+
+// Disconnect user from call
+export const handleCallDisconnect = ({ from, to }: { from: any, to: any }) => {
+  // Copy caller and callee’s data to dictionary of available users
+  users[from] = blockedUsers[from];
+  users[to] = blockedUsers[to];
+
+  // Remove caller and callee from dictionary of blocked users
+  delete blockedUsers[from];
+  delete blockedUsers[to];
 };
 
 
@@ -101,7 +115,10 @@ const selectMatch = (socket: Socket) => {
     return user.distance > acc.distance ? user : acc;
   });
 
-  return userMostDistant.id;
+  return {
+    id: userMostDistant.id,
+    distance: userMostDistant.distance
+  };
 }
 
 // Calculate the distance in km between two pairs of

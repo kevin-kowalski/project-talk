@@ -4,7 +4,7 @@ import AudioCall from './components/AudioCall';
 function App() {
   return (
     <div className='app'>
-      <h4>Project Talk</h4>
+      <h1 className='title'>Project Talk</h1>
       <AudioCall />
     </div>
   );

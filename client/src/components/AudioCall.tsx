@@ -3,18 +3,22 @@ import * as SocketIOClient from 'socket.io-client';
 import io from 'socket.io-client';
 import Peer from 'simple-peer';
 import CablesPatch from './CablesPatch';
+import SimplePeer from 'simple-peer';
 
 // const ENDPOINT = 'http://127.0.0.1:80';
 const ENDPOINT = 'https://cuddly-vaguely-lark.ngrok-free.app';
 
 const AudioCall = () => {
   const [position, setPosition] = useState<GeolocationPosition | null>(null);
-  const [error, setError] = useState<GeolocationPositionError | null>(null);
+  const [error, setError] = useState<{error: Boolean, message: String} | null>(null);
   const [socket, setSocket] = useState<SocketIOClient.Socket | null>(null);
 
   const [matchedCallee, setMatchedCallee] = useState<string | null>(null);
+  const [matchedCalleeDistance, setMatchedCalleeDistance] = useState<number | null>(null);
   const [matchedCaller, setMatchedCaller] = useState<string | null>(null);
   const [matchedCallerData, setMatchedCallerData] = useState<{from: string, signalData: any} | null>(null);
+
+  const [peerConnection, setPeerConnection] = useState<SimplePeer.Instance | null>(null);
 
   const [localStream, setLocalStream] = useState<MediaStream | undefined>(undefined);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -42,7 +46,7 @@ const AudioCall = () => {
 
     const errorCallback = (geoError: GeolocationPositionError) => {
       setError({
-        ...geoError,
+        error: true,
         message: `Failed to get user location${geoError.message ? ': ' + geoError.message : ''}`
       });
     };
@@ -54,6 +58,10 @@ const AudioCall = () => {
   useEffect(() => {
     const newSocket = io(ENDPOINT);
     setSocket(newSocket);
+
+    newSocket.on('error', (error) => {
+      setError(error);
+    })
 
     if (position) {
       newSocket.on('connect', () => {
@@ -107,9 +115,10 @@ const AudioCall = () => {
       socket.emit('requestMatch', { fromUser: socket.id });
       console.log('"requestMatch" emitted');
 
-      socket.on('matchFound', ({ matchSocketId }: { matchSocketId: string }) => {
-        console.log(`Match found: ${matchSocketId}`);
+      socket.on('matchFound', ({ matchSocketId, matchDistance }: { matchSocketId: string, matchDistance: number }) => {
+        console.log(`Match found: ${matchSocketId} (distance: ${matchDistance})`);
         setMatchedCallee(matchSocketId);
+        setMatchedCalleeDistance(matchDistance);
       });
     }
   };
@@ -132,12 +141,18 @@ const AudioCall = () => {
         stream: localStream,
       });
 
+      setPeerConnection(peerCaller);
+
       peerCaller.on('connect', () => {
         setInCall(true);
       })
 
       peerCaller.on('close', () => {
         setInCall(false);
+        setMatchedCaller(null);
+        setMatchedCallee(null);
+        setRemoteStream(undefined);
+        peerCaller.destroy();
       })
 
       peerCaller.on('signal', (data) => {
@@ -221,12 +236,18 @@ const AudioCall = () => {
         stream: localStream,
       });
 
+      setPeerConnection(peerCallee);
+
       peerCallee.on('connect', () => {
         setInCall(true);
       })
 
       peerCallee.on('close', () => {
         setInCall(false);
+        setMatchedCaller(null);
+        setMatchedCallee(null);
+        setRemoteStream(undefined);
+        peerCallee.destroy();
       })
 
       peerCallee.on('signal', (data) => {
@@ -252,6 +273,33 @@ const AudioCall = () => {
     }
   }
 
+  // Leave the call
+  const leaveCall = () => {
+    // To do
+    if (remoteStream) {
+      remoteStream.getTracks().forEach(track => track.stop());
+    }
+
+    // Send signal to close peer connection
+    if (socket && (matchedCaller || matchedCallee)) {
+      socket.emit('callDisconnect', {
+        from: socket.id,
+        to: matchedCaller || matchedCallee
+      });
+    }
+
+    // Close peer connection
+    if (peerConnection) {
+      peerConnection.destroy();
+    }
+
+    // Update state variables
+    setInCall(false);
+    setMatchedCaller(null);
+    setMatchedCallee(null);
+    setRemoteStream(undefined);
+  }
+
   // Show the user’s media stream in the page
   useEffect(() => {
     if (localStream && localVideoRef.current) {
@@ -268,35 +316,54 @@ const AudioCall = () => {
     }
   }, [remoteStream]);
 
+  // Clean up when before component is unmounted
+  useEffect(() => {
+    return () => {
+      leaveCall();
+    }
+  }, [])
+
   // Render component
   return (
     <div>
       {error && (
-        <p>Error: {error.message}</p>
+        <p className='system-message'>Error: {error.message}</p>
       )}
 
-      {!position && !error && (
-        <p>Getting user location...</p>
+      {!error && !position && (
+        <p>Requesting user location...</p>
       )}
 
-      {position && !error && localStream && remoteStream && (
-        <div>
-          <p>Match found!</p>
-          <p>Matched user’s socket ID: {matchedCaller || matchedCallee}</p>
-        </div>
+      {!error && position && !localStream && (
+        <p>Requesting user media...</p>
       )}
 
-      {position && !error && localStream && (
-        <div>
-          <CablesPatch
-            requestMatch={requestMatch}
-            analyzerRemote={analyzerRemote}
-            bufferLengthRemote={bufferLengthRemote}
-            dataArrayRemote={dataArrayRemote}
-            inCall={inCall}
-          />
-        </div>
+      {!error && socket && position && localStream && !remoteStream && (
+        <p className='system-message'>Connected as: {socket.id}</p>
       )}
+
+      {!error && position && localStream && remoteStream && (
+        <p className='system-message'>Connected to: {matchedCaller || matchedCallee}</p>
+      )}
+
+      {!error && position && localStream && remoteStream && (
+        <p>{matchedCalleeDistance ? (`Distance: ${matchedCalleeDistance === 0.00 ? '<' : ''}${matchedCalleeDistance} km`) : ''}</p>
+      )}
+
+      {localStream && (
+        <div className={`symbol-recording${remoteStream ? ' live' : ''}`}></div>
+      )}
+
+      <CablesPatch
+        requestMatch={requestMatch}
+        leaveCall={leaveCall}
+        analyzerRemote={analyzerRemote}
+        bufferLengthRemote={bufferLengthRemote}
+        dataArrayRemote={dataArrayRemote}
+        inCall={inCall}
+        error={error}
+        setError={setError}
+      />
     </div>
   );
 };

@@ -2,20 +2,27 @@ import React, { useEffect, useState } from 'react';
 
 function CablesPatch({
   requestMatch,
+  leaveCall,
   analyzerRemote,
   bufferLengthRemote,
   dataArrayRemote,
-  inCall
+  inCall,
+  error,
+  setError
 }: {
   requestMatch: Function,
+  leaveCall: Function,
   analyzerRemote: AnalyserNode | null,
   bufferLengthRemote: number,
   dataArrayRemote: Uint8Array | null,
-  inCall: Boolean
+  inCall: Boolean,
+  error: {error: Boolean, message: String} | null,
+  setError: Function
 }) {
 
-  const [patchLoaded, setPatchLoaded] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const [patchLoaded, setPatchLoaded] = useState<Boolean>(false);
+  const [darkMode, setDarkMode] = useState<Boolean>(true);
+  const [message, setMessage] = useState<String | null>(null)
 
   const canvasId = "glcanvas";
   const patchDir = '/patch/';
@@ -84,27 +91,54 @@ function CablesPatch({
 
   useEffect(() => {
     if (patchLoaded) {
-      CABLES.patch.setVariable("inCall", inCall);
+      CABLES.patch.setVariable('inCall', inCall);
+      if (!inCall) {
+        setError(null);
+      }
     }
   }, [inCall, patchLoaded])
 
-  // Handle the user initiating the call
-  const handleCallClick = () => {
+  useEffect(() => {
     if (patchLoaded) {
+      CABLES.patch.setVariable('error', error ? true : false);
+    }
+  }, [error, patchLoaded])
+
+  // Handle the user initiating the call
+  const handleOrbClick = () => {
+    if (patchLoaded && !inCall) {
+      setError(null);
       requestMatch();
+    }
+    else if (patchLoaded && inCall) {
+      leaveCall();
+    }
+
+    if (message) {
+      setMessage('');
+      CABLES.patch.setVariable('orbHovered', false);
     }
   };
 
   // Handle the user hovering over the orb
   const handleMouseOver = () => {
     if (patchLoaded) {
-      CABLES.patch.setVariable("orbHovered", true);
+      CABLES.patch.setVariable('orbHovered', true);
+    }
+    if (patchLoaded && !inCall) {
+      setMessage('Call a stranger?');
+    }
+    else if (patchLoaded && inCall) {
+      setMessage('Leave call?');
     }
   }
 
   const handleMouseOut = () => {
     if (patchLoaded) {
-      CABLES.patch.setVariable("orbHovered", false);
+      CABLES.patch.setVariable('orbHovered', false);
+    }
+    if (message) {
+      setMessage('');
     }
   }
 
@@ -120,9 +154,10 @@ function CablesPatch({
     <>
       <canvas id={canvasId}></canvas>
       <div className='click-box-wrapper'>
-        <div className='click-box' onClick={handleCallClick} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}></div>
+        <div className='click-box' onClick={handleOrbClick} onMouseOver={handleMouseOver} onMouseOut={handleMouseOut}></div>
       </div>
-      <div className='mode-selector' data-value={darkMode} onClick={handleModeSelectorClick}>{darkMode ? 'Light Mode' : 'Dark Mode'}</div>
+      <div className='mode-selector clickable' data-value={darkMode} onClick={handleModeSelectorClick}>{darkMode ? 'Light Mode' : 'Dark Mode'}</div>
+      <p><br/>{message}</p>
     </>
   );
 }

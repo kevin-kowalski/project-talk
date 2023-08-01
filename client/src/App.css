@@ -14,6 +14,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+
   font-family: 'Inter';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -37,10 +38,19 @@ p {
 
 .app {
   position: relative;
-  text-align: center;
-  padding: var(--padding);
-  z-index: 100;
   height: 100vh;
+  padding: var(--padding);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+  z-index: 100;
+}
+
+.title {
+  font-size: 16px;
 }
 
 /* CLICK BOX */
@@ -48,16 +58,18 @@ p {
 .click-box-wrapper {
   position: fixed;
   inset: 0;
+
   display: flex;
   justify-content: center;
   align-items: center;
+
   z-index: -1;
 }
 
 .click-box {
-  /* border: 1px solid hsla(0, 0%, 100%, 1); */
   width: 48vh;
   height: 48vh;
+
   border-radius: 50%;
   cursor: default;
 }
@@ -67,10 +79,12 @@ p {
 canvas {
   position: fixed;
   inset: 0;
-  z-index: -1;
+
   opacity: 0;
   transition: opacity 1s ease-in-out;
+
   pointer-events: none;
+  z-index: -1;
 }
 
 /* MODE SELECTOR */
@@ -78,4 +92,61 @@ canvas {
 .mode-selector {
   font-family: 'Xanh Mono';
   cursor: pointer;
+}
+
+.clickable {
+  opacity: 1;
+}
+.clickable:hover {
+  opacity: .8;
+}
+
+/* SYSTEM MESSAGES */
+
+.system-message {
+  animation-name: disappear;
+  animation-delay: 2s;
+  animation-duration: 1.6s;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes disappear {
+  0% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+    position: fixed;
+    top: -100px;
+  }
+}
+
+/* ICON */
+
+.symbol-recording {
+  position: fixed;
+  top: var(--padding);
+  left: var(--padding);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: hsl(146deg 100% 35%);
+  animation: pulsate .5s ease-in-out alternate infinite;
+  transition: background-color .2s ease-in-out;
+}
+.symbol-recording.live {
+  background-color: hsl(12, 100%, 35%);
+}
+
+@keyframes pulsate {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

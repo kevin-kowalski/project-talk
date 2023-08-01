@@ -11,6 +11,7 @@ import {
   handleUserDisconnected,
   handleTryCall,
   handleAnswerCall,
+  handleCallDisconnect
 } from "./matching";
 
 const app = new Koa();
@@ -48,6 +49,10 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('answerCall', (data) => {
     handleAnswerCall(data);
+  })
+
+  socket.on('callDisconnect', (data) => {
+    handleCallDisconnect(data);
   })
 });
 
