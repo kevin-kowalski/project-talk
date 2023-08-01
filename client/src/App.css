@@ -1,4 +1,81 @@
+/* FONTS */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Xanh+Mono:ital@0;1&display=swap');
+
+/* VARIABLES */
+
+:root {
+  --padding: 20px;
+}
+
+/* BASICS */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  color: whitesmoke;
+  background-color: black;
+}
+
+body:has( div[data-value=false]) {
+  color: black;
+}
+
+p {
+  font-family: 'Xanh Mono';
+}
+
+/* APP */
+
 .app {
+  position: relative;
   text-align: center;
-  padding: 20px;
+  padding: var(--padding);
+  z-index: 100;
+  height: 100vh;
+}
+
+/* CLICK BOX */
+
+.click-box-wrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: -1;
+}
+
+.click-box {
+  /* border: 1px solid hsla(0, 0%, 100%, 1); */
+  width: 48vh;
+  height: 48vh;
+  border-radius: 50%;
+  cursor: default;
+}
+
+/* CANVAS */
+
+canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  pointer-events: none;
+}
+
+/* MODE SELECTOR */
+
+.mode-selector {
+  font-family: 'Xanh Mono';
+  cursor: pointer;
 }
