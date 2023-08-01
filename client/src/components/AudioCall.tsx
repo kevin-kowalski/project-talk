@@ -93,7 +93,7 @@ const AudioCall = () => {
   useEffect(() => {
     if (position && !error) {
       navigator.mediaDevices
-        .getUserMedia({ audio: true, video: true })
+        .getUserMedia({ audio: true, video: false })
         .then((stream) => {
           console.log('Got media stream from user\nStream id:', stream.id);
           setLocalStream(stream);
@@ -118,7 +118,8 @@ const AudioCall = () => {
       socket.on('matchFound', ({ matchSocketId, matchDistance }: { matchSocketId: string, matchDistance: number }) => {
         console.log(`Match found: ${matchSocketId} (distance: ${matchDistance})`);
         setMatchedCallee(matchSocketId);
-        setMatchedCalleeDistance(matchDistance);
+        // setMatchedCalleeDistance(matchDistance);
+        setMatchedCalleeDistance(11781.36);
       });
     }
   };
@@ -350,9 +351,9 @@ const AudioCall = () => {
         <p>{matchedCalleeDistance ? (`Distance: ${matchedCalleeDistance === 0.00 ? '<' : ''}${matchedCalleeDistance} km`) : ''}</p>
       )}
 
-      {localStream && (
+      {/* {localStream && (
         <div className={`symbol-recording${remoteStream ? ' live' : ''}`}></div>
-      )}
+      )} */}
 
       <CablesPatch
         requestMatch={requestMatch}
