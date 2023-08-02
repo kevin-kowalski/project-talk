@@ -1,3 +1,4 @@
+
 ## Project Talk
 Project Talk randomly pairs two strangers in a peer-to-peer audio chat.
 #### Install:
@@ -20,3 +21,6 @@ In order to run the project I highly recommend using [ngrok](https://ngrok.com/)
 
 #### Additional information:
 The cables.gl patch used for the orb/bubble/blob can be found here: https://cables.gl/p/mYAbMC
+
+#### Things to improve:
+At the moment there are only two components in the React app, especially the AudioCall component is extremely bloated and would benefit from refactoring and modularization.
