@@ -1,7 +1,7 @@
 
 ## Project Talk
 Project Talk randomly pairs two strangers in a peer-to-peer audio chat.
-#### Install:
+#### Install and run:
 In order to run the project I highly recommend using [ngrok](https://ngrok.com/) (or similar) to tunnel the localhost:port you are using to a publicly accessible URL using SSL, as it is prohibited by most browsers to establish a WebRTC connection between peers over HTTP.
 
 1. Make a ngrok account, and get your credentials.
@@ -13,7 +13,7 @@ In order to run the project I highly recommend using [ngrok](https://ngrok.com/)
 7. Go to `client/src/components/AudioCall.tsx` and change the `BASE_URL` constant to the URL provided by ngrok.
 8. `cd` to `client` and run `npm start build` there, to build the app.
 9. `cd` to `server` and run `npm start` there, to build and run the server.
-10. Ther app is now running, and accessible from the internet.
+10. The app is now running, and accessible from the internet.
 
 #### Known issues:
 1. Running the project locally might need some fixes, as it gives CORS errors at the moment.
