@@ -87,7 +87,7 @@ canvas {
   z-index: -1;
 }
 
-/* MODE SELECTOR */
+/* THEME MODE SELECTOR */
 
 .mode-selector {
   font-family: 'Xanh Mono';
@@ -122,31 +122,5 @@ canvas {
     opacity: 0;
     position: fixed;
     top: -100px;
-  }
-}
-
-/* ICON */
-
-.symbol-recording {
-  position: fixed;
-  top: var(--padding);
-  left: var(--padding);
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: hsl(146deg 100% 35%);
-  animation: pulsate .5s ease-in-out alternate infinite;
-  transition: background-color .2s ease-in-out;
-}
-.symbol-recording.live {
-  background-color: hsl(12, 100%, 35%);
-}
-
-@keyframes pulsate {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }

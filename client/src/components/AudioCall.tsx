@@ -5,10 +5,19 @@ import Peer from 'simple-peer';
 import CablesPatch from './CablesPatch';
 import SimplePeer from 'simple-peer';
 
-// const ENDPOINT = 'http://127.0.0.1:80';
-const ENDPOINT = 'https://cuddly-vaguely-lark.ngrok-free.app';
+// IMPORTANT: This is the URL, that is used to connect
+// socket.io to the back-end server.
+//
+// Change it to the URL provided by ngrok, or your
+// localhost and port that you set up in the back-end.
+//
+// The app will not build without it!
+//
+// const BASE_URL = 'http://127.0.0.1:80';
 
 const AudioCall = () => {
+
+  // State variables
   const [position, setPosition] = useState<GeolocationPosition | null>(null);
   const [error, setError] = useState<{error: Boolean, message: String} | null>(null);
   const [socket, setSocket] = useState<SocketIOClient.Socket | null>(null);
@@ -31,6 +40,10 @@ const AudioCall = () => {
   const [dataArrayRemote, setDataArrayRemote] = useState<Uint8Array | null>(null);
 
   const [inCall, setInCall] = useState(false);
+
+  /* * * * */
+  /* Setup */
+  /* * * * */
 
   // Requesting user’s geolocation position
   useEffect(() => {
@@ -56,7 +69,7 @@ const AudioCall = () => {
 
   // Set up socket connection for user
   useEffect(() => {
-    const newSocket = io(ENDPOINT);
+    const newSocket = io(BASE_URL);
     setSocket(newSocket);
 
     newSocket.on('error', (error) => {
@@ -65,7 +78,7 @@ const AudioCall = () => {
 
     if (position) {
       newSocket.on('connect', () => {
-        console.log(`Connected to server with:\nsocket.id: ${newSocket.id}\nposition:`, position);
+        // console.log(`Connected to server with:\nsocket.id: ${newSocket.id}\nposition:`, position);
 
         newSocket.emit('userConnected', {
           coords: {
@@ -77,8 +90,7 @@ const AudioCall = () => {
       });
 
       newSocket.on('callRequest', (data) => {
-        console.log('callRequest data:', data)
-        console.log(`Call request received from user (id: ${data.from})`);
+        // console.log(`Call request received from user (id: ${data.from})`);
 
         setMatchedCallerData(data);
       })
@@ -95,7 +107,7 @@ const AudioCall = () => {
       navigator.mediaDevices
         .getUserMedia({ audio: true, video: false })
         .then((stream) => {
-          console.log('Got media stream from user\nStream id:', stream.id);
+          // console.log('Got media stream from user\nStream id:', stream.id);
           setLocalStream(stream);
         })
         .catch((error) => {
@@ -107,19 +119,22 @@ const AudioCall = () => {
     }
   }, [position, error]);
 
+  /* * * * * */
+  /* Calling */
+  /* * * * * */
+
   // Request remote id
   const requestMatch = () => {
-    console.log('Requesting callee…');
+    // console.log('Requesting callee…');
 
     if (socket) {
       socket.emit('requestMatch', { fromUser: socket.id });
-      console.log('"requestMatch" emitted');
+      // console.log('"requestMatch" emitted');
 
       socket.on('matchFound', ({ matchSocketId, matchDistance }: { matchSocketId: string, matchDistance: number }) => {
-        console.log(`Match found: ${matchSocketId} (distance: ${matchDistance})`);
+        // console.log(`Match found: ${matchSocketId} (distance: ${matchDistance})`);
         setMatchedCallee(matchSocketId);
-        // setMatchedCalleeDistance(matchDistance);
-        setMatchedCalleeDistance(11781.36);
+        setMatchedCalleeDistance(matchDistance);
       });
     }
   };
@@ -133,7 +148,7 @@ const AudioCall = () => {
 
   // Call user helper
   const callMatchedCallee = () => {
-    console.log('Calling matched user…');
+    // console.log('Calling matched user…');
 
     if (socket && matchedCallee) {
       const peerCaller = new Peer({
@@ -165,7 +180,7 @@ const AudioCall = () => {
       });
 
       peerCaller.on('stream', (stream) => {
-        console.log(`Received stream from callee\nStream id: ${stream.id}`);
+        // console.log(`Received stream from callee\nStream id: ${stream.id}`);
         setRemoteStream(stream);
       });
 
@@ -174,9 +189,9 @@ const AudioCall = () => {
         if (matchedCallee === from) {
           peerCaller.signal(signalData);
         }
-        else {
-          console.log('Call answer from different user than matched');
-        }
+        // else {
+        //   console.log('Call answer from different user than matched');
+        // }
       });
     }
   };
@@ -190,7 +205,6 @@ const AudioCall = () => {
   const processRemoteStream = (stream: MediaStream) => {
     const audioContext = new AudioContext();
     const source = audioContext.createMediaStreamSource(stream);
-    // setSourceNode(source);
 
     // Create and play audio element
     const mediaElement = new Audio();
@@ -228,7 +242,7 @@ const AudioCall = () => {
 
   // Answer call helper
   const answerCall = ({ from, signalData }: {from: string, signalData: any}) => {
-    console.log('Answering call…');
+    // console.log('Answering call…');
 
     if (socket && matchedCaller) {
       const peerCallee = new Peer({
@@ -260,7 +274,7 @@ const AudioCall = () => {
       });
 
       peerCallee.on('stream', (stream) => {
-        console.log(`Received stream from caller\nStream id: ${stream.id}`);
+        // console.log(`Received stream from caller\nStream id: ${stream.id}`);
         setRemoteStream(stream);
       });
 
@@ -268,9 +282,9 @@ const AudioCall = () => {
       if (matchedCaller === from) {
         peerCallee.signal(signalData);
       }
-      else {
-        console.log('Call request from different user than matched');
-      }
+      // else {
+      //   console.log('Call request from different user than matched');
+      // }
     }
   }
 
@@ -324,7 +338,10 @@ const AudioCall = () => {
     }
   }, [])
 
-  // Render component
+  /* * * * * * * * * * */
+  /* Render component  */
+  /* * * * * * * * * * */
+
   return (
     <div>
       {error && (
@@ -350,10 +367,6 @@ const AudioCall = () => {
       {!error && position && localStream && remoteStream && (
         <p>{matchedCalleeDistance ? (`Distance: ${matchedCalleeDistance === 0.00 ? '<' : ''}${matchedCalleeDistance} km`) : ''}</p>
       )}
-
-      {/* {localStream && (
-        <div className={`symbol-recording${remoteStream ? ' live' : ''}`}></div>
-      )} */}
 
       <CablesPatch
         requestMatch={requestMatch}

@@ -20,13 +20,20 @@ function CablesPatch({
   setError: Function
 }) {
 
+  // State variables
   const [patchLoaded, setPatchLoaded] = useState<Boolean>(false);
   const [darkMode, setDarkMode] = useState<Boolean>(true);
   const [message, setMessage] = useState<String | null>(null)
 
+  // Constants
   const canvasId = "glcanvas";
   const patchDir = '/patch/';
 
+  /* * * * * * * * */
+  /* Set up patch  */
+  /* * * * * * * * */
+
+  // Add the patch to the page, and initialize it
   useEffect(() => {
     const script = document.createElement('script');
     script.src = patchDir + '/js/patch.js';
@@ -34,11 +41,7 @@ function CablesPatch({
     script.onload = initPatch;
     document.body.appendChild(script);
 
-    return () => {
-      // Cleanup function
-      document.body.removeChild(script);
-    }
-
+    // Initialization helper
     function initPatch () {
       CABLES.patch = new CABLES.Patch({
         patch: CABLES.exportedPatch,
@@ -52,17 +55,33 @@ function CablesPatch({
       });
     }
 
+    // Executed when the patch is initialized
     function patchInitialized () {
-      console.log('Patch initialized');
+      // console.log('Patch initialized');
     }
 
+    // Executed when the patch finished loading
     function patchFinishedLoading () {
-      console.log('Patch finished loading');
+      // console.log('Patch finished loading');
       setPatchLoaded(true);
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.removeChild(script);
     }
   }, [canvasId, patchDir]);
 
+  /* * * * * * * */
+  /* Use effects */
+  /* * * * * * * */
+
+  // When the remote stream analysis data is changed
   useEffect(() => {
+    // Request an animation frame for itself,
+    // calculate the average volume from the remote
+    // stream data variables,
+    // and pass its value to the patch
     const updateVolumeRemote = () => {
       if (analyzerRemote && dataArrayRemote) {
         requestAnimationFrame(updateVolumeRemote);
@@ -73,14 +92,19 @@ function CablesPatch({
       }
     };
 
+    // Run the function for the first time (From then on,
+    // it calls itself through the animation frame
     updateVolumeRemote();
   }, [analyzerRemote, bufferLengthRemote, dataArrayRemote])
 
+  // Initialize the patch, when it finished loading
   useEffect(() => {
     if (patchLoaded) {
+      // Make the canvas appear
       const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
       canvas.style.opacity = '1';
 
+      // Make the click box overlay work
       const clickBox = document.querySelector('.click-box') as HTMLDivElement;
       clickBox.style.cursor = 'pointer';
 
@@ -89,6 +113,7 @@ function CablesPatch({
     }
   }, [patchLoaded])
 
+  // When the patch finished loading and inCall changes, pass its value to the patch
   useEffect(() => {
     if (patchLoaded) {
       CABLES.patch.setVariable('inCall', inCall);
@@ -98,11 +123,16 @@ function CablesPatch({
     }
   }, [inCall, patchLoaded])
 
+  // When the patch finished loading and error changes, pass its value to the patch
   useEffect(() => {
     if (patchLoaded) {
       CABLES.patch.setVariable('error', error ? true : false);
     }
   }, [error, patchLoaded])
+
+  /* * * * * * * * * * * * * * * * */
+  /* Handlers for user interaction */
+  /* * * * * * * * * * * * * * * * */
 
   // Handle the user initiating the call
   const handleOrbClick = () => {
@@ -120,7 +150,7 @@ function CablesPatch({
     }
   };
 
-  // Handle the user hovering over the orb
+  // When the patch finished loading, and the user hovers the orb
   const handleMouseOver = () => {
     if (patchLoaded) {
       CABLES.patch.setVariable('orbHovered', true);
@@ -133,6 +163,7 @@ function CablesPatch({
     }
   }
 
+  // When the patch finished loading, and the user stops hovering the orb
   const handleMouseOut = () => {
     if (patchLoaded) {
       CABLES.patch.setVariable('orbHovered', false);
@@ -142,13 +173,20 @@ function CablesPatch({
     }
   }
 
-  // Handle the user clicking the mode selector button
+  // When the user clicks the mode selector button
   const handleModeSelectorClick = () => {
+    // Toggle the darkMode variable (weird hack)
     setDarkMode(!darkMode);
+    // When the patch finished loading
     if (patchLoaded) {
+      // Pass the value of darkMode to the patch
       CABLES.patch.setVariable('darkMode', !darkMode);
     }
   }
+
+  /* * * * * * * * * * */
+  /* Render component  */
+  /* * * * * * * * * * */
 
   return (
     <>

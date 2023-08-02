@@ -18,7 +18,6 @@ export const handleUserConnected = (socket: Socket, position: GeolocationPositio
 export const handleUserDisconnected = (socket: Socket) => {
   console.log(`\n> Disconnected: ${socket.id}`);
   // Delete the user from both dictionaries
-  // (only happens if they were present)
   delete users[socket.id];
   delete blockedUsers[socket.id];
 };
