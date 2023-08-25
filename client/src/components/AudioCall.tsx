@@ -38,7 +38,7 @@ const AudioCall = () => {
   useEffect(() => {
     const options = {
       enableHighAccuracy: true,
-      maximumAge: 0
+      maximumAge: 0,
     };
 
     const successCallback = (position: GeolocationPosition) => {
