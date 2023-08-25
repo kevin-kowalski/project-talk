@@ -1,4 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+
+interface CablesPatchProps {
+  requestMatch: Function,
+  leaveCall: Function,
+  analyzerRemote: AnalyserNode | null,
+  bufferLengthRemote: number,
+  dataArrayRemote: Uint8Array | null,
+  inCall: Boolean,
+  error: {error: Boolean, message: String} | null,
+  setError: Function
+}
 
 function CablesPatch({
   requestMatch,
@@ -9,29 +20,16 @@ function CablesPatch({
   inCall,
   error,
   setError
-}: {
-  requestMatch: Function,
-  leaveCall: Function,
-  analyzerRemote: AnalyserNode | null,
-  bufferLengthRemote: number,
-  dataArrayRemote: Uint8Array | null,
-  inCall: Boolean,
-  error: {error: Boolean, message: String} | null,
-  setError: Function
-}) {
+}: CablesPatchProps) {
 
-  // State variables
   const [patchLoaded, setPatchLoaded] = useState<Boolean>(false);
   const [darkMode, setDarkMode] = useState<Boolean>(true);
   const [message, setMessage] = useState<String | null>(null)
 
-  // Constants
   const canvasId = "glcanvas";
   const patchDir = '/patch/';
 
-  /* * * * * * * * */
   /* Set up patch  */
-  /* * * * * * * * */
 
   // Add the patch to the page, and initialize it
   useEffect(() => {
@@ -50,19 +48,12 @@ function CablesPatch({
         glCanvasId: canvasId,
         canvas: {'alpha': true, 'premultipliedAlpha': true},
         glCanvasResizeToWindow: true,
-        onPatchLoaded: patchInitialized,
         onFinishedLoading: patchFinishedLoading,
       });
     }
 
-    // Executed when the patch is initialized
-    function patchInitialized () {
-      // console.log('Patch initialized');
-    }
-
     // Executed when the patch finished loading
     function patchFinishedLoading () {
-      // console.log('Patch finished loading');
       setPatchLoaded(true);
     }
 
@@ -72,9 +63,7 @@ function CablesPatch({
     }
   }, [canvasId, patchDir]);
 
-  /* * * * * * * */
   /* Use effects */
-  /* * * * * * * */
 
   // When the remote stream analysis data is changed
   useEffect(() => {
@@ -130,9 +119,7 @@ function CablesPatch({
     }
   }, [error, patchLoaded])
 
-  /* * * * * * * * * * * * * * * * */
   /* Handlers for user interaction */
-  /* * * * * * * * * * * * * * * * */
 
   // Handle the user initiating the call
   const handleOrbClick = () => {
@@ -184,9 +171,7 @@ function CablesPatch({
     }
   }
 
-  /* * * * * * * * * * */
   /* Render component  */
-  /* * * * * * * * * * */
 
   return (
     <>
