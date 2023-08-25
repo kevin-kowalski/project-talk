@@ -1,7 +1,7 @@
 import './App.css';
 import AudioCall from './components/AudioCall';
 
-function App() {
+const App = () => {
   return (
     <div className='app'>
       <h1 className='title'>Project Talk</h1>

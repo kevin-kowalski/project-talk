@@ -1,3 +1,4 @@
+import dotenv from 'dotenv';
 import Koa from 'koa';
 import serve from 'koa-static';
 import path from 'path';
@@ -16,17 +17,9 @@ import {
 
 const app = new Koa();
 
-// STEP 1: Set your port here.
-//
-// const PORT = 80;
-
-// STEP 2: This is the URL, that is used by the front-end
-// to connect via socket.io to the back-end server.
-//
-// Change it to the URL provided by ngrok, or your
-// localhost:port that your server is set to.
-//
-// const ORIGIN = 'http://127.0.0.1:80';
+dotenv.config();
+const PORT = process.env.PORT || 80;
+const ORIGIN = process.env.ORIGIN || 'http://127.0.0.1:80';
 
 // Serve the React client build folder as static files
 app.use(serve(path.join(__dirname, '../../client/build')));
@@ -34,7 +27,7 @@ app.use(serve(path.join(__dirname, '../../client/build')));
 const server = http.createServer(app.callback());
 export const io = socketIO(server, {
   cors: {
-    origin: ORIGIN, // See above ^
+    origin: ORIGIN,
     methods: ['GET', 'POST'],
     credentials: true
   }
@@ -67,6 +60,6 @@ io.on('connection', (socket: Socket) => {
   });
 });
 
-server.listen(PORT, () => { // See above ^
-  console.log('listens…');
+server.listen(PORT, () => {
+  console.log(`>> Server listens on port :${PORT}`);
 });
