@@ -15,7 +15,7 @@ In order to quickly run the project with all its features, I highly recommend us
 3. Run it to start the tunnel. (Just follow the simple guide on the ngrok website.)
 4. Clone the repository.
 5. Run `npm install` in `/server` and `/client`.
-6. Create a .env file and define `PORT`, and `ORIGIN` variables.
+6. (Optional: In the `/server` directory, create a .env file and define `PORT`, and `ORIGIN` variables.)
 8. Go to `client/src/components/AudioCall.tsx`, and change the `SOCKET_SERVER_URL` constant to the URL provided by ngrok.
 9. `cd` to `client` and run `npm start build` there, to build the app.
 10. `cd` to `server` and run `npm start` there, to build and run the server.
