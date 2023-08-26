@@ -5,7 +5,7 @@ import Peer from 'simple-peer';
 import CablesPatch from './CablesPatch';
 import SimplePeer from 'simple-peer';
 
-const SOCKET_SERVER_URL = process.env.SOCKET_SERVER_URL || 'http://127.0.0.1:80';
+const SOCKET_SERVER_URL = 'http://127.0.0.1:80';
 
 const AudioCall = () => {
 
