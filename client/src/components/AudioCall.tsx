@@ -5,8 +5,6 @@ import Peer from 'simple-peer';
 import CablesPatch from './CablesPatch';
 import SimplePeer from 'simple-peer';
 
-const SOCKET_SERVER_URL = 'http://127.0.0.1:80';
-
 const AudioCall = () => {
 
   const [position, setPosition] = useState<GeolocationPosition | null>(null);
@@ -57,7 +55,7 @@ const AudioCall = () => {
 
   // Set up socket connection for user
   useEffect(() => {
-    const newSocket = io(SOCKET_SERVER_URL);
+    const newSocket = io();
     setSocket(newSocket);
 
     newSocket.on('error', (error) => {
