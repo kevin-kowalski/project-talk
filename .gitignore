@@ -4,3 +4,6 @@
 # misc
 .DS_Store
 .env
+
+#fly.io
+fly.toml

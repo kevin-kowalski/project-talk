@@ -1,5 +1,5 @@
-import dotenv from 'dotenv';
 import Koa from 'koa';
+import config from './config';
 import serve from 'koa-static';
 import path from 'path';
 import http from 'http';
@@ -17,21 +17,11 @@ import {
 
 const app = new Koa();
 
-dotenv.config();
-const PORT = process.env.PORT || 80;
-const ORIGIN = process.env.ORIGIN || 'http://127.0.0.1:80';
-
 // Serve the React client build folder as static files
 app.use(serve(path.join(__dirname, '../../client/build')));
 
 const server = http.createServer(app.callback());
-export const io = socketIO(server, {
-  cors: {
-    origin: ORIGIN,
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
-});
+export const io = socketIO(server, {});
 
 // Set up socket connection to clients
 io.on('connection', (socket: Socket) => {
@@ -60,6 +50,6 @@ io.on('connection', (socket: Socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`>> Server listens on port :${PORT}`);
+server.listen(config.port, () => {
+  console.log(`>> Server listens on port :${config.port}`);
 });
