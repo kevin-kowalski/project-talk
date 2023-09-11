@@ -12,8 +12,9 @@ Project Talk connects strangers through random peer-to-peer audio chats, fosteri
 The app is currently deployed at https://pt.fly.dev/.
 If you want to run it locally, follow these steps:
 1. Clone the repository.
-2. `cd` to the `client` directory and run `npm install && npm run build` there to install dependecies, and build the app.
-3. `cd` to the `server` directory and run `npm install && tsc && npm start` there to install dependecies, and build and run the server.
+2. `cd` to the `client` directory and run `npm install && npm run build`.
+3. `cd` to the `server` directory and run `npm install && tsc && npm start`.
+The app is now running on `http://localhost:3000/` by default.
 
 #### Tech stack:
 Node.js, Koa, React, TypeScript, WebSockets (Socket.io), WebRTC, Cables.gl
